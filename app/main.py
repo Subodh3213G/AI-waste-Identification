@@ -81,6 +81,11 @@ def _cached_model():
 def _classify_pil(pil_image, use_gemini=False):
     """Run classification on a single PIL image using Gemini Vision (fallback to TF)."""
     api_key = os.environ.get("GEMINI_API_KEY", "")
+    
+    # If TensorFlow is unavailable, we MUST use Gemini for images as well
+    if not TF_AVAILABLE:
+        use_gemini = True
+        
     if use_gemini and api_key and api_key != "your_gemini_api_key_here":
         import google.generativeai as genai
         import json
