@@ -4,6 +4,8 @@
 **Assigned Student:** Subodh Yadav  
 **Mentorship Focus:** Learn → Build → Integrate → Test → Document → Present  
 
+🚀 **Live App Demo:** [https://ai-waste-identification-9.streamlit.app/](https://ai-waste-identification-9.streamlit.app/)
+
 ---
 
 ## 1. Project Overview
