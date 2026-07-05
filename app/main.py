@@ -53,7 +53,7 @@ section[data-testid="stSidebar"] hr{border-color:rgba(255,255,255,.15)}
 .metric-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#64748b;margin-top:.25rem}
 .chip{display:inline-block;padding:.3rem .85rem;border-radius:9999px;font-size:.8rem;font-weight:600}
 .hero-title{font-size:2.8rem;font-weight:700;color:#0b1c30;line-height:1.15;letter-spacing:-.02em;margin-bottom:.5rem}
-.hero-subtitle{font-size:1.15rem;color:#64748b;line-height:1.6;max-width:600px}
+.hero-subtitle{font-size:1.15rem;color:#64748b;line-height:1.6;max-width:600px;margin:0 auto;}
 .hero-badge{display:inline-block;background:linear-gradient(135deg,#10b981,#006c49);color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.35rem 1rem;border-radius:9999px;margin-bottom:1rem}
 .feature-card{background:#fff;border:1px solid #e2e8f0;border-radius:1rem;padding:1.5rem;text-align:center;min-height:180px;transition:transform .2s,box-shadow .2s}
 .feature-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,108,73,.10)}
@@ -78,7 +78,7 @@ section[data-testid="stSidebar"] hr{border-color:rgba(255,255,255,.15)}
 def _cached_model():
     return load_model()
 
-def _classify_pil(pil_image, use_gemini=False):
+def _classify_pil(pil_image, use_gemini=True):
     """Run classification on a single PIL image using Gemini Vision (fallback to TF)."""
     api_key = os.environ.get("GEMINI_API_KEY", "")
     
@@ -91,7 +91,7 @@ def _classify_pil(pil_image, use_gemini=False):
         import json
         from app.classifier import CATEGORY_COLORS, BIN_COLORS
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         prompt = '''Identify the primary waste item in this image.
 Classify it into EXACTLY one of these 4 categories: Organic, Recyclable, Hazardous, E-waste.
 Return ONLY a raw JSON array containing exactly one object, without any markdown backticks. Example:
@@ -200,19 +200,6 @@ with st.sidebar:
         <p style="font-size:.8rem;opacity:.7;margin:0">Waste Classifier &amp; Sorting Assistant</p>
     </div>""", unsafe_allow_html=True)
     st.divider()
-
-    input_mode = st.radio("📥 Input Mode", ["📷 Image", "🎬 Video"], horizontal=True, label_visibility="visible")
-
-    if input_mode == "📷 Image":
-        st.markdown("##### 📤 Upload Waste Image")
-        uploaded_file = st.file_uploader("Upload image", type=["jpg","jpeg","png","webp"], label_visibility="collapsed", key="img_upload")
-        uploaded_video = None
-    else:
-        st.markdown("##### 🎬 Upload Waste Video")
-        uploaded_video = st.file_uploader("Upload video", type=["mp4","avi","mov","mkv","webm"], label_visibility="collapsed", key="vid_upload")
-        uploaded_file = None
-
-    st.divider()
     st.markdown("##### ⚙️ System Status")
     
     def _status_card(icon, text, color):
@@ -221,7 +208,7 @@ with st.sidebar:
     if TF_AVAILABLE:
         _status_card("✅", "TensorFlow ready", "#10b981")
     else:
-        _status_card("⚠️", "TensorFlow unavailable (demo)", "#f59e0b")
+        _status_card("✅", "TensorFlow unavailable", "#f59e0b")
         
     if CV2_AVAILABLE:
         _status_card("✅", "OpenCV ready", "#10b981")
@@ -253,15 +240,62 @@ with st.sidebar:
 # ║  MAIN CONTENT                                                    ║
 # ╚═══════════════════════════════════════════════════════════════════╝
 
-if uploaded_file is None and uploaded_video is None:
-    # ── LANDING PAGE ──────────────────────────────────────────────
-    st.markdown("""<div style="padding:2rem 0 1rem">
+if True:
+    # ── LANDING PAGE & UPLOADER ──────────────────────────────────
+    st.markdown("""<div style="padding:2rem 0 1rem; text-align:center;">
         <span class="hero-badge">AI-Powered Sustainability</span>
         <h1 class="hero-title">Classify Waste.<br/>Protect the Planet.</h1>
-        <p class="hero-subtitle">Upload an image or video of any waste item and let our
+        <p class="hero-subtitle" style="margin: 0 auto; text-align: center;">Upload an image or video of any waste item and let our
         MobileNetV2 deep-learning model identify it. EcoSort AI provides instant
         classification, eco-disposal guides, and carbon-footprint insights.</p>
     </div>""", unsafe_allow_html=True)
+    
+    st.markdown("""
+    <style>
+    /* Enlarge the radio buttons */
+    div[data-testid="stRadio"] label {
+        font-size: 1.4rem !important;
+        font-weight: 600 !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+    /* Enlarge the file uploader */
+    [data-testid="stFileUploader"] section {
+        padding: 3rem !important;
+        border: 3px dashed #10b981 !important;
+        background-color: rgba(16, 185, 129, 0.05);
+    }
+    [data-testid="stFileUploader"] section:hover {
+        background-color: rgba(16, 185, 129, 0.1);
+    }
+    [data-testid="stFileUploader"] small {
+        font-size: 1.1rem !important;
+    }
+    [data-testid="stFileUploader"] button {
+        font-size: 1.2rem !important;
+        padding: 0.5rem 1.5rem !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    c_left, c_center, c_right = st.columns([1, 6, 1])
+    with c_center:
+        input_mode = st.radio("📥 Input Mode", ["📷 Image", "🎬 Video"], horizontal=True, label_visibility="collapsed")
+        
+        if input_mode == "📷 Image":
+            st.markdown("<h3 style='text-align:center;'>📤 Upload Waste Image</h3>", unsafe_allow_html=True)
+            uploaded_file = st.file_uploader("Upload image", type=["jpg","jpeg","png","webp"], label_visibility="collapsed", key="img_upload")
+            uploaded_video = None
+        else:
+            st.markdown("<h3 style='text-align:center;'>🎬 Upload Waste Video</h3>", unsafe_allow_html=True)
+            uploaded_video = st.file_uploader("Upload video", type=["mp4","avi","mov","mkv","webm"], label_visibility="collapsed", key="vid_upload")
+            uploaded_file = None
+
+if uploaded_file is None and uploaded_video is None:
+    st.markdown("<div style='height:2rem'></div>", unsafe_allow_html=True)
 
     cols = st.columns(4)
     for col, (icon, title, desc) in zip(cols, [
@@ -300,7 +334,7 @@ elif uploaded_file is not None:
     pil_image = load_and_validate_image(uploaded_file)
     meta = get_image_metadata(pil_image)
 
-    with st.spinner("🔍 Analysing image with MobileNetV2…"):
+    with st.spinner("🔍 Analysing image with AI…"):
         results = _classify_pil(pil_image)
 
     top = results[0]
